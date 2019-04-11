@@ -214,5 +214,96 @@ fs.unlink('./file1.txt', function(err){
 6) 删除空目录:  fs.rmdir()
 
 ## 读取流和写入流
+
 ### 概念
 所有互联网传输的数据都是以流的方式，流是一组有起点有终点的数据传输方式
+
+### 流的操作
+
+1）流式读取文件
+一节一节的读取数据，一节64kb ==> 65536字节
+```
+var fs = require('fs');
+// 创建一个可以读取的流
+var stream = fs.createReadStream('./file2.txt');
+
+// 绑定data事件，当读取到内容时执行
+stream.on('data', function(a){
+    console.log('------------');
+    console.log(a);
+})
+
+// 读取流的事件 end 完成事件
+stream.on('end', function(){
+    console.log('ended')
+})
+
+// 读取流的事件 error 完成事件
+stream.on('error', function(err){
+    console.log('error')
+})
+```
+
+2）以流的方式写文件
+```
+var fs = require('fs');
+
+// 创建一个可以写入的流
+var stream = fs.createWriteStream('./file2.txt');
+
+// 写入数据
+stream.write("曹操1");
+stream.write("曹操2");
+stream.write("曹操3");
+stream.end();     // 必须显示的声明结束
+
+// 写入流的事件 finish 完成事件
+stream.on('finish', function(){
+    console.log('finished')
+})
+
+// 写入流的事件 error 错误事件
+stream.on('error', function(){
+    console.log('error')
+})
+```
+
+## 管道
+
+### 管道概念
+管道是 node.js 中流的实现机制，直接定义一个输出流，导出输入流
+
+### 管道语法
+```
+var fs = require('fs');
+var s1 = fs.createReadStream('./file1.txt');
+var s2 = fs.createWriteStream('./file2.txt');
+
+// 使用管道方式实现大文件复制
+s1.pipe(s2)
+
+// 以流的方式实现大文件复制，读取一节存一节
+s1.on('data', function(a){
+    s2.write(a);
+})
+s1.on('end', function(){
+    s2.end();
+    console.log('文件复制完成')
+})
+```
+
+## 链式流
+将多个管道连接起来，实现链式处理。
+```
+var fs = require('fs');
+var zlib = require('zlib');
+
+var s1 = fs.createReadStream('./file1.txt');
+var s2 = fs.createWriteStream('./file1.txt.zip')
+
+s1.pipe(zlib.createGzip()).pipe(s2);
+```
+
+## url 模块
+url => 全球统一资源定位符
+
